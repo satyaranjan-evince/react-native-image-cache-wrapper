@@ -15,8 +15,7 @@ import {
 } from 'react-native';
 import React, {Component} from 'react';
 
-import RNFetchBlob from 'rn-fetch-blob';
-
+import ReactNativeBlobUtil from "react-native-blob-util"
 const SHA1 = require('crypto-js/sha1');
 
 const defaultImageTypes = ['png', 'jpeg', 'jpg', 'gif', 'bmp', 'tiff', 'tif'];
@@ -28,7 +27,7 @@ export default class CachedImage extends Component {
         activityIndicator: null, // default not show an activity indicator
     };
 
-    static cacheDir = RNFetchBlob.fs.dirs.CacheDir + "/CachedImage/";
+    static cacheDir = ReactNativeBlobUtil.fs.dirs.CacheDir + "/CachedImage/";
 
     static sameURL = []
     /**
@@ -50,7 +49,7 @@ export default class CachedImage extends Component {
      */
     static isUrlCached = (url: string, success: Function, failure: Function) => {
         const cacheFile = _getCacheFilename(url);
-        RNFetchBlob.fs.exists(cacheFile)
+        ReactNativeBlobUtil.fs.exists(cacheFile)
             .then((exists) => {
                 success && success(exists);
             })
@@ -115,7 +114,7 @@ export default class CachedImage extends Component {
         }
         CachedImage.sameURL.push(cacheFile)
 
-        RNFetchBlob.fs.stat(cacheFile)
+        ReactNativeBlobUtil.fs.stat(cacheFile)
             .then((stats) => {
                 // if exist and not expired then use it.
                 if (!Boolean(expiration) || (expiration * 1000 + stats.lastModified) > (new Date().getTime())) {
@@ -232,7 +231,7 @@ export default class CachedImage extends Component {
 
 async function _unlinkFile(file) {
     try {
-        return await RNFetchBlob.fs.unlink(file);
+        return await ReactNativeBlobUtil.fs.unlink(file);
     } catch (e) {
     }
 }
@@ -270,7 +269,7 @@ async function _saveCacheFile(url: string, success: Function, failure: Function)
         if (isNetwork) {
             const tempCacheFile = cacheFile + '.tmp';
             _unlinkFile(tempCacheFile);
-            RNFetchBlob.config({
+            ReactNativeBlobUtil.config({
                 // response data will be saved to this path if it has access right.
                 path: tempCacheFile,
             })
@@ -285,7 +284,7 @@ async function _saveCacheFile(url: string, success: Function, failure: Function)
                         let actualContentLength;
 
                         try {
-                            const fileStats = await RNFetchBlob.fs.stat(res.path());
+                            const fileStats = await ReactNativeBlobUtil.fs.stat(res.path());
 
                             if (!fileStats || !fileStats.size) {
                                 throw new Error("FileNotFound:"+url);
@@ -302,7 +301,7 @@ async function _saveCacheFile(url: string, success: Function, failure: Function)
                     }
 
                     _unlinkFile(cacheFile);
-                    RNFetchBlob.fs
+                    ReactNativeBlobUtil.fs
                         .mv(tempCacheFile, cacheFile)
                         .then(() => {
                             success && success(cacheFile);
@@ -318,7 +317,7 @@ async function _saveCacheFile(url: string, success: Function, failure: Function)
                 });
         } else if (isBase64) {
             let data = url.replace(/data:/i, '');
-            RNFetchBlob.fs
+            ReactNativeBlobUtil.fs
                 .writeFile(cacheFile, data, 'base64')
                 .then(() => {
                     success && success(cacheFile);
